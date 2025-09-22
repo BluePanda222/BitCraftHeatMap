@@ -1,0 +1,4 @@
+[submodule "BitCraftHeatMap/bindings"]
+	path = BitCraftHeatMap/bindings
+	url = https://github.com/BitCraftToolBox/BitCraft_Bindings
+	branch = cs-region
