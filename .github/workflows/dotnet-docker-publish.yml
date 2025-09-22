@@ -1,0 +1,61 @@
+name: .NET Core Build, Docker, and Publish to GH Packages
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+env:
+  PROJECT_NAME: BitCraftHeatMap
+  DOTNET_VERSION: '9.0.x'
+  DOCKER_IMAGE_NAME: bitcraft-heatmap
+  DOCKERFILE_PATH: BitCraftHeatMap/Dockerfile
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write # Required to push Docker images to GitHub Packages
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      - name: Build .NET Application
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Publish .NET Application for Docker
+        run: dotnet publish ${{ env.PROJECT_NAME }}.csproj --configuration Release --output ./app/publish --no-build
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ env.DOCKERFILE_PATH }}
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ env.DOCKER_IMAGE_NAME }}:latest
+            ghcr.io/${{ github.repository_owner }}/${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
