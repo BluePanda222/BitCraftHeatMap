@@ -38,7 +38,7 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Publish .NET Application for Docker
-        run: dotnet publish ${{ env.PROJECT_NAME }}.csproj --configuration Release --output ./app/publish --no-build
+        run: dotnet publish ./BitCraftHeatMap/${{ env.PROJECT_NAME }}.csproj --configuration Release --output ./BitCraftHeatMap/publish --no-build
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
